@@ -18,6 +18,9 @@ EntryPoint = IO.File:main
 
 all: test
 
+run_test: test
+	./test
+
 test:
 	$(AC) $(SourceList) test.aum --entrypoint=$(TestEntryPoint) --output=test
 
