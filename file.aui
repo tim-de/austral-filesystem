@@ -25,6 +25,4 @@ module IO.File is
     generic [R: Region, S: Region]
     function write(fh: &![FileHandle, R], buf: Span[Nat8, S]): Index;
 
-    function main():ExitCode;
-
 end module.

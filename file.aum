@@ -75,11 +75,6 @@ module body IO.File is
         return writeInner(ptr, 1, count, fh->handle);
     end;
 
-    function main(): ExitCode is
-        printLn("Yeah!");
-        return ExitSuccess();
-    end;
-
     pragma Foreign_Import(External_Name => "fopen");
     function openInner(pathname: Span[Nat8, Static], mode: Span[Nat8, Static]): Int64 is
     end;
