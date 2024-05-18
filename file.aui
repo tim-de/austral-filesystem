@@ -7,7 +7,7 @@ import FileSystem (
     FileSystemCapability
 );
 
-module IO.File is
+module FileSystem.File is
     
     type FileHandle: Linear;
     

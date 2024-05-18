@@ -17,14 +17,14 @@ import FileSystem (
     FileSystemCapability
 );
 
-module body IO.File is
+module body FileSystem.File is
     record FileHandle: Linear is
-        handle: Int64;
+        handle: Index;
     end;
     
     generic [R: Region]
     function open(fs: &![FileSystemCapability, R], pathname: Span[Nat8, Static], mode: Span[Nat8, Static]): Option[FileHandle] is
-        let handle: Int64 := openInner(pathname, mode);
+        let handle: Index := openInner(pathname, mode);
         if handle <= 0 then
                 return None();
         else
@@ -37,7 +37,7 @@ module body IO.File is
     end;
 
     function close(fh: FileHandle): Unit is
-        let {handle: Int64} := fh;
+        let {handle: Index} := fh;
         closeInner(handle);
         return nil;
     end;
@@ -76,19 +76,19 @@ module body IO.File is
     end;
 
     pragma Foreign_Import(External_Name => "fopen");
-    function openInner(pathname: Span[Nat8, Static], mode: Span[Nat8, Static]): Int64 is
+    function openInner(pathname: Span[Nat8, Static], mode: Span[Nat8, Static]): Index is
     end;
 
     pragma Foreign_Import(External_Name => "fclose");
-    function closeInner(fh: Int64): Int64 is
+    function closeInner(fh: Index): Int64 is
     end;
 
     pragma Foreign_Import(External_Name => "fread");
-    function readInner(ptr: Pointer[Nat8], size: Index, nmemb: Index, stream: Int64): Index is
+    function readInner(ptr: Pointer[Nat8], size: Index, nmemb: Index, stream: Index): Index is
     end;
 
     pragma Foreign_Import(External_Name => "fwrite");
-    function writeInner(ptr: Pointer[Nat8], size: Index, nmemb: Index, stream: Int64): Index is
+    function writeInner(ptr: Pointer[Nat8], size: Index, nmemb: Index, stream: Index): Index is
     end;
 
 end module body.
