@@ -22,9 +22,12 @@ module body FileSystem.File is
         handle: Index;
     end;
     
-    generic [R: Region]
-    function open(fs: &![FileSystemCapability, R], pathname: Span[Nat8, Static], mode: Span[Nat8, Static]): Option[FileHandle] is
-        let handle: Index := openInner(pathname, mode);
+    generic [R: Region, Q: Region, P: Region]
+    function open(fs: &![FileSystemCapability, R], pathname: Span[Nat8, Q], mode: Span[Nat8, P]): Option[FileHandle] is
+        let path_ptr: Pointer[Nat8] := spanToPointer(pathname);
+        let mode_ptr: Pointer[Nat8] := spanToPointer(mode);
+        
+        let handle: Index := openInner(path_ptr, mode_ptr);
         if handle <= 0 then
                 return None();
         else
@@ -68,15 +71,15 @@ module body FileSystem.File is
         end case;
     end;
 
-    generic [R: Region, S: Region]
-    function write(fh: &![FileHandle, R], buf: Span[Nat8, S]): Index is
+    generic [R: Region, Q: Region]
+    function write(fh: &![FileHandle, R], buf: Span[Nat8, Q]): Index is
         let ptr: Pointer[Nat8] := spanToPointer(buf);
         let count: Index := spanLength(buf);
         return writeInner(ptr, 1, count, fh->handle);
     end;
 
     pragma Foreign_Import(External_Name => "fopen");
-    function openInner(pathname: Span[Nat8, Static], mode: Span[Nat8, Static]): Index is
+    function openInner(pathname: Pointer[Nat8], mode: Pointer[Nat8]): Index is
     end;
 
     pragma Foreign_Import(External_Name => "fclose");

@@ -11,8 +11,8 @@ module FileSystem.File is
     
     type FileHandle: Linear;
     
-    generic [R: Region]
-    function open(fs: &![FileSystemCapability, R], pathname: Span[Nat8, Static], mode: Span[Nat8, Static]): Option[FileHandle];
+    generic [R: Region, Q: Region, P: Region]
+    function open(fs: &![FileSystemCapability, R], pathname: Span[Nat8, Q], mode: Span[Nat8, P]): Option[FileHandle];
 
     function close(fh: FileHandle): Unit;
 
@@ -22,7 +22,7 @@ module FileSystem.File is
     generic [R: Region]
     function readSafe(fh: &[FileHandle, R], count: Index): Option[Buffer[Nat8]];
 
-    generic [R: Region, S: Region]
-    function write(fh: &![FileHandle, R], buf: Span[Nat8, S]): Index;
+    generic [R: Region, Q: Region]
+    function write(fh: &![FileHandle, R], buf: Span[Nat8, Q]): Index;
 
 end module.
