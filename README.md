@@ -17,4 +17,5 @@ This module handles capabilities used to interact with the file system.
 #### FileSystem.File
 
 This module uses the capability from FileSystem and allows file operations,
-currently opening, closing, and read/write operations.
+currently opening and closing files as well as read, write, seek, and tell
+operations.

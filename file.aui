@@ -19,9 +19,21 @@ module FileSystem.File is
     """
     type FileHandle: Linear;
     
+    """
+    A union used by seek to determine where to offset from:
+        Set: offset from the start of the file
+        Current: offset from the current position
+        End: offset from the end of the file
+    """
+    union SeekWhence: Free is
+        case Set;
+        case Current;
+        case End;
+    end;
 
     """
-    Opens the file with the specified mode. The modes are:
+    Opens the file with the specified mode.
+    The modes are:
         r   Read only
         r+  Read and write
         w   Write only
@@ -32,13 +44,11 @@ module FileSystem.File is
     generic [R: Region, Q: Region, P: Region]
     function open(fs: &![FileSystemCapability, R], pathname: Span[Nat8, Q], mode: Span[Nat8, P]): Option[FileHandle];
 
-
     """
     Closes an open FileHandle
     """
     function close(fh: FileHandle): Unit;
 
-    
     """
     Reads count bytes from the file associated with fh, aborting on allocation
     failure
@@ -54,10 +64,22 @@ module FileSystem.File is
     function readSafe(fh: &[FileHandle, R], count: Index): Option[Buffer[Nat8]];
 
     """
-    Write the contents of buf to the file pointed at by fh, returning the number of
+    Write the contents of buf to the stream pointed at by fh, returning the number of
     bytes written
     """
     generic [R: Region, Q: Region]
     function write(fh: &![FileHandle, R], buf: Span[Nat8, Q]): Index;
+
+    """
+    Sets the file position indicator in the stream pointed to by fh
+    """
+    generic [R: Region]
+    function seek(fh: &[FileHandle, R], offset: Int64, whence: SeekWhence): Int32;
+
+    """
+    Obtains the value of the file position indicator in the stream pointed to by fh
+    """
+    generic [R: Region]
+    function tell(fh: &[FileHandle, R]): Int64;
 
 end module.
