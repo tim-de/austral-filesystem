@@ -57,20 +57,24 @@ module body Test is
 
     generic [R: Region, Q: Region]
     function testFileExist(fs: &![FileSystemCapability, R], sys: &![SystemCapability, Q]): Bool is
-        borrow my_sys: &![SystemCapability, S] := sys do
+        borrow my_sys: &![SystemCapability, P] := &~sys do
             system(my_sys, "touch exist");
-            let maybe_fh: Option[FileHandle] := open(fs, "exist", "r");
-
-            case maybe_fh of
-                when None do
-                    system(my_sys, "rm exist");
-                    return false;
-                when Some(value as fh: FileHandle) do
-                    close(fh);
-                    system(my_sys, "rm exist");
-                    return true;
-            end case;
         end borrow;
+        let maybe_fh: Option[FileHandle] := open(fs, "exist", "r");
+
+        case maybe_fh of
+            when None do
+                borrow my_sys: &![SystemCapability,P] := &~sys do
+                    system(my_sys, "rm exist");
+                end borrow;
+                return false;
+            when Some(value as fh: FileHandle) do
+                close(fh);
+                borrow my_sys: &![SystemCapability, P] := &~sys do
+                    system(my_sys, "rm exist");
+                end borrow;
+                return true;
+        end case;
     end;
 
     generic [R: Region]
@@ -99,7 +103,9 @@ module body Test is
                 var fh: FileHandle := value;
                 let written: Index := write(&!fh, "Hello, there!\n");
                 close(fh);
-                system(sys, "echo newfile.txt contains: && cat newfile.txt && rm newfile.txt");
+                borrow my_sys: &![SystemCapability, P] := &~sys do
+                    system(my_sys, "echo newfile.txt contains: && cat newfile.txt && rm newfile.txt");
+                end borrow;
                 return written = 14;
         end case;
     end;
