@@ -1,0 +1,25 @@
+pragma Unsafe_Module;
+
+module body System is
+    record SystemCapability: Linear is
+    end;
+
+    generic [R: Region]
+    function acquireSystem(root: &![RootCapability, R]): SystemCapability is
+        return SystemCapability();
+    end;
+
+    function releaseSystem(sys: SystemCapability): Unit is
+        let {} := sys;
+        return nil;
+    end;
+
+    generic [R: Region]
+    function system(sys: &![SystemCapability, R], command: Span[Nat8, Static]): Int32 is
+        return systemInner(command);
+    end;
+
+    pragma Foreign_Import(External_Name => "system");
+    function systemInner(command: Span[Nat8, Static]): Int32 is
+    end;
+end module body.

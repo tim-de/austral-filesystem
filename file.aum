@@ -1,0 +1,99 @@
+pragma Unsafe_Module;
+
+import Standard.Buffer (
+    Buffer,
+    initialize,
+    safeInitialize,
+    getSpanMut
+);
+
+import Austral.Memory (
+    Pointer,
+    spanToPointer,
+    spanWriteToPointer
+);
+
+import FileSystem (
+    FileSystemCapability
+);
+
+module body IO.File is
+    record FileHandle: Linear is
+        handle: Int64;
+    end;
+    
+    generic [R: Region]
+    function open(fs: &![FileSystemCapability, R], pathname: Span[Nat8, Static], mode: Span[Nat8, Static]): Option[FileHandle] is
+        let handle: Int64 := openInner(pathname, mode);
+        if handle <= 0 then
+                return None();
+        else
+            return  Some(
+                value => FileHandle(
+                    handle => handle
+                )
+            );
+        end if;
+    end;
+
+    function close(fh: FileHandle): Unit is
+        let {handle: Int64} := fh;
+        closeInner(handle);
+        return nil;
+    end;
+
+    generic [R: Region]
+    function read(fh: &[FileHandle, R], count: Index): Buffer[Nat8] is
+        var buf: Buffer[Nat8] := initialize(count, 0:Nat8);
+        borrow bufref: &![Buffer[Nat8], BufReg] := &!buf do
+            var data: Span![Nat8, BufReg] := getSpanMut(bufref, 0, count - 1);
+            var ptr: Pointer[Nat8] := spanWriteToPointer(data);
+            readInner(ptr, 1, count, fh->handle);
+        end borrow;
+        return buf;
+    end;
+
+    generic [R: Region]
+    function readSafe(fh: &[FileHandle, R], count: Index): Option[Buffer[Nat8]] is
+        var maybe_buf: Option[Buffer[Nat8]] := safeInitialize(count, 0:Nat8);
+        case maybe_buf of
+            when None do
+                return None();
+            when Some(value: Buffer[Nat8]) do
+                var buf: Buffer[Nat8] := value;
+                var data: Span![Nat8, R] := getSpanMut(&!buf, 0, count - 1);
+                var ptr: Pointer[Nat8] := spanWriteToPointer(data);
+                readInner(ptr, 1, count, fh->handle);
+                return Some(value => buf);
+        end case;
+    end;
+
+    generic [R: Region, S: Region]
+    function write(fh: &![FileHandle, R], buf: Span[Nat8, S]): Index is
+        let ptr: Pointer[Nat8] := spanToPointer(buf);
+        let count: Index := spanLength(buf);
+        return writeInner(ptr, 1, count, fh->handle);
+    end;
+
+    function main(): ExitCode is
+        printLn("Yeah!");
+        return ExitSuccess();
+    end;
+
+    pragma Foreign_Import(External_Name => "fopen");
+    function openInner(pathname: Span[Nat8, Static], mode: Span[Nat8, Static]): Int64 is
+    end;
+
+    pragma Foreign_Import(External_Name => "fclose");
+    function closeInner(fh: Int64): Int64 is
+    end;
+
+    pragma Foreign_Import(External_Name => "fread");
+    function readInner(ptr: Pointer[Nat8], size: Index, nmemb: Index, stream: Int64): Index is
+    end;
+
+    pragma Foreign_Import(External_Name => "fwrite");
+    function writeInner(ptr: Pointer[Nat8], size: Index, nmemb: Index, stream: Int64): Index is
+    end;
+
+end module body.

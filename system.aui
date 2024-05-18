@@ -1,0 +1,12 @@
+module System is
+
+    type SystemCapability: Linear;
+
+    generic [R: Region]
+    function acquireSystem(root: &![RootCapability, R]): SystemCapability;
+
+    function releaseSystem(sys: SystemCapability): Unit;
+
+    generic [R: Region]
+    function system(sys: &![SystemCapability, R], command: Span[Nat8, Static]): Int32;
+end module.

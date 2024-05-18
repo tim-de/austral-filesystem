@@ -1,0 +1,16 @@
+module body FileSystem is
+
+    record FileSystemCapability: Linear is
+    end;
+
+    generic [R: Region]
+    function acquireFileSystem(root: &![RootCapability, R]): FileSystemCapability is
+        return FileSystemCapability();
+    end;
+
+    function releaseFileSystem(fs: FileSystemCapability): Unit is
+        let {} := fs;
+        return nil;
+    end;
+
+end module body.

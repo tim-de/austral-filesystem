@@ -1,0 +1,10 @@
+module FileSystem is
+    
+    type FileSystemCapability: Linear;
+
+    generic [R: Region]
+    function acquireFileSystem(root: &![RootCapability, R]): FileSystemCapability;
+
+    function releaseFileSystem(fs: FileSystemCapability): Unit;
+
+end module.

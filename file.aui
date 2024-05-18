@@ -1,0 +1,30 @@
+
+import Standard.Buffer (
+    Buffer
+);
+
+import FileSystem (
+    FileSystemCapability
+);
+
+module IO.File is
+    
+    type FileHandle: Linear;
+    
+    generic [R: Region]
+    function open(fs: &![FileSystemCapability, R], pathname: Span[Nat8, Static], mode: Span[Nat8, Static]): Option[FileHandle];
+
+    function close(fh: FileHandle): Unit;
+
+    generic [R: Region]
+    function read(fh: &[FileHandle, R], count: Index): Buffer[Nat8];
+
+    generic [R: Region]
+    function readSafe(fh: &[FileHandle, R], count: Index): Option[Buffer[Nat8]];
+
+    generic [R: Region, S: Region]
+    function write(fh: &![FileHandle, R], buf: Span[Nat8, S]): Index;
+
+    function main():ExitCode;
+
+end module.
