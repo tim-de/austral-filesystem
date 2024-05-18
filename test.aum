@@ -29,59 +29,59 @@ module body Test is
 
     function main(root: RootCapability): ExitCode is
         var mut_root: RootCapability := root;
-        var fs: FileSystemCapability := acquireFileSystem(&!mut_root);
-        var sys: SystemCapability := acquireSystem(&!mut_root);
-        test(testFileNotExist(&!fs), "Nonexistent file test");
-        test(testFileExist(&!fs, &!sys), "Existent file test");
-        test(testReadFile(&!fs), "Read file test");
-        test(testWriteFile(&!fs, &!sys), "Write new file test");
-        releaseFileSystem(fs);
-        releaseSystem(sys);
-
+        test(testFileNotExist(&!mut_root), "Nonexistent file test");
+        test(testFileExist(&!mut_root), "Existent file test");
+        test(testReadFile(&!mut_root), "Read file test");
+        test(testWriteFile(&!mut_root), "Write new file test");
         surrenderRoot(mut_root);
 
         return ExitSuccess();
     end;
 
     generic [R: Region]
-    function testFileNotExist(fs: &![FileSystemCapability, R]): Bool is
-        let maybe_fh: Option[FileHandle] := open(fs, "nonexist", "r");
+    function testFileNotExist(root: &![RootCapability, R]): Bool is
+        var fs: FileSystemCapability := acquireFileSystem(root);
+        let maybe_fh: Option[FileHandle] := open(&!fs, "nonexist", "r");
         case maybe_fh of
             when None do
+                releaseFileSystem(fs);
                 return true;
             when Some(value as fh: FileHandle) do
                 close(fh);
+                releaseFileSystem(fs);
                 return false;
         end case;
     end;
 
-    generic [R: Region, Q: Region]
-    function testFileExist(fs: &![FileSystemCapability, R], sys: &![SystemCapability, Q]): Bool is
-        borrow my_sys: &![SystemCapability, P] := &~sys do
-            system(my_sys, "touch exist");
-        end borrow;
-        let maybe_fh: Option[FileHandle] := open(fs, "exist", "r");
+    generic [R: Region]
+    function testFileExist(root: &![RootCapability, R]): Bool is
+        var sys: SystemCapability := acquireSystem(&~root);
+        var fs: FileSystemCapability := acquireFileSystem(&~root);
+        system(&!sys, "touch exist");
+        let maybe_fh: Option[FileHandle] := open(&!fs, "exist", "r");
 
         case maybe_fh of
             when None do
-                borrow my_sys: &![SystemCapability,P] := &~sys do
-                    system(my_sys, "rm exist");
-                end borrow;
+                system(&!sys, "rm exist");
+                releaseSystem(sys);
+                releaseFileSystem(fs);
                 return false;
             when Some(value as fh: FileHandle) do
                 close(fh);
-                borrow my_sys: &![SystemCapability, P] := &~sys do
-                    system(my_sys, "rm exist");
-                end borrow;
+                system(&!sys, "rm exist");
+                releaseSystem(sys);
+                releaseFileSystem(fs);
                 return true;
         end case;
     end;
 
     generic [R: Region]
-    function testReadFile(fs: &![FileSystemCapability, R]): Bool is 
-        let maybe_fh: Option[FileHandle] := open(fs, "lipsum.txt", "r");
+    function testReadFile(root: &![RootCapability, R]): Bool is 
+        var fs: FileSystemCapability := acquireFileSystem(root);
+        let maybe_fh: Option[FileHandle] := open(&!fs, "lipsum.txt", "r");
         case maybe_fh of 
             when None do
+                releaseFileSystem(fs);
                 return false;
             when Some(value as fh: FileHandle) do
                 let count: Index := 360;
@@ -89,23 +89,28 @@ module body Test is
                 printLn(getSpan(&buf, 0, count - 1));
                 destroyFree(buf);
                 close(fh);
+                releaseFileSystem(fs);
                 return true;
         end case;
     end;
 
-    generic [R: Region, Q: Region]
-    function testWriteFile(fs: &![FileSystemCapability, R], sys: &![SystemCapability, Q]): Bool is
-        let maybe_fh: Option[FileHandle] := open(fs, "newfile.txt", "w");
+    generic [R: Region]
+    function testWriteFile(root: &![RootCapability, R]): Bool is
+        var sys: SystemCapability := acquireSystem(&~root);
+        var fs: FileSystemCapability := acquireFileSystem(&~root);
+        let maybe_fh: Option[FileHandle] := open(&!fs, "newfile.txt", "w");
         case maybe_fh of
             when None do
+                releaseFileSystem(fs);
+                releaseSystem(sys);
                 return false;
             when Some(value: FileHandle) do
                 var fh: FileHandle := value;
                 let written: Index := write(&!fh, "Hello, there!\n");
                 close(fh);
-                borrow my_sys: &![SystemCapability, P] := &~sys do
-                    system(my_sys, "echo newfile.txt contains: && cat newfile.txt && rm newfile.txt");
-                end borrow;
+                system(&!sys, "echo newfile.txt contains: && cat newfile.txt && rm newfile.txt");
+                releaseFileSystem(fs);
+                releaseSystem(sys);
                 return written = 14;
         end case;
     end;
