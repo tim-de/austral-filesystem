@@ -1,5 +1,9 @@
+"""
+This module manages the creation and destruction of capabilities
+for interacting with the file system
+"""
 module FileSystem is
-    
+
     type FileSystemCapability: Linear;
 
     generic [R: Region]

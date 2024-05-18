@@ -7,21 +7,56 @@ import FileSystem (
     FileSystemCapability
 );
 
+"""
+This module implements open, read, write, and close operations
+on files in the filesystem.
+"""
 module FileSystem.File is
     
+    """
+    A handle allowing read and/or write operations to be performed
+    on a file
+    """
     type FileHandle: Linear;
     
+
+    """
+    Opens the file with the specified mode. The modes are:
+        r   Read only
+        r+  Read and write
+        w   Write only
+        w+  Read and write
+        a   Append
+        a+  Append and write
+    """
     generic [R: Region, Q: Region, P: Region]
     function open(fs: &![FileSystemCapability, R], pathname: Span[Nat8, Q], mode: Span[Nat8, P]): Option[FileHandle];
 
+
+    """
+    Closes an open FileHandle
+    """
     function close(fh: FileHandle): Unit;
 
+    
+    """
+    Reads count bytes from the file associated with fh, aborting on allocation
+    failure
+    """
     generic [R: Region]
     function read(fh: &[FileHandle, R], count: Index): Buffer[Nat8];
 
+    """
+    Reads count bytes from the file associated wihh fh, returning None() on allocation
+    failure
+    """
     generic [R: Region]
     function readSafe(fh: &[FileHandle, R], count: Index): Option[Buffer[Nat8]];
 
+    """
+    Write the contents of buf to the file pointed at by fh, returning the number of
+    bytes written
+    """
     generic [R: Region, Q: Region]
     function write(fh: &![FileHandle, R], buf: Span[Nat8, Q]): Index;
 
