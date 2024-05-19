@@ -23,7 +23,7 @@ EntryPoint = IO.File:main
 
 all: test
 
-run_test: test
+run_test: clean test
 	./test
 
 test:

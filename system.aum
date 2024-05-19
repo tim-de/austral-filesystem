@@ -1,5 +1,10 @@
 pragma Unsafe_Module;
 
+import Austral.Memory (
+    Pointer,
+    spanToPointer
+);
+
 module body System is
     record SystemCapability: Linear is
     end;
@@ -14,12 +19,13 @@ module body System is
         return nil;
     end;
 
-    generic [R: Region]
-    function system(sys: &![SystemCapability, R], command: Span[Nat8, Static]): Int32 is
-        return systemInner(command);
+    generic [R: Region, Q: Region]
+    function system(sys: &![SystemCapability, R], command: Span[Nat8, Q]): Int32 is
+        let command_ptr: Pointer[Nat8] := spanToPointer(command);
+        return systemInner(command_ptr);
     end;
 
     pragma Foreign_Import(External_Name => "system");
-    function systemInner(command: Span[Nat8, Static]): Int32 is
+    function systemInner(command: Pointer[Nat8]): Int32 is
     end;
 end module body.

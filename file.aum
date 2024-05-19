@@ -79,17 +79,8 @@ module body FileSystem.File is
     end;
 
     generic [R: Region]
-    function seek(fh: &[FileHandle, R], offset: Int64, whence: SeekWhence): Int32 is
-        var inner_whence: Int32 := 0
-        case whence of
-            when Set do
-                inner_whence := SEEK_SET;
-            when Current do
-                inner_whence := SEEK_CUR;
-            when End do
-                inner_whence := SEEK_END;
-        end case;
-        return seekInner(fh->handle, offset, inner_whence);
+    function seek(fh: &[FileHandle, R], offset: Int64, whence: Int32): Int32 is
+        return seekInner(fh->handle, offset, whence);
     end;
 
     union SeekWhence: Free is

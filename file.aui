@@ -1,4 +1,8 @@
 
+"""
+This module implements open, read, write, and close operations
+on files in the filesystem.
+"""
 import Standard.Buffer (
     Buffer
 );
@@ -7,10 +11,6 @@ import FileSystem (
     FileSystemCapability
 );
 
-"""
-This module implements open, read, write, and close operations
-on files in the filesystem.
-"""
 module FileSystem.File is
     
     """
@@ -20,16 +20,14 @@ module FileSystem.File is
     type FileHandle: Linear;
     
     """
-    A union used by seek to determine where to offset from:
+    Constants used by seek to determine where to offset from:
         Set: offset from the start of the file
         Current: offset from the current position
         End: offset from the end of the file
     """
-    union SeekWhence: Free is
-        case Set;
-        case Current;
-        case End;
-    end;
+    constant SEEK_SET: Int32;
+    constant SEEK_CUR: Int32;
+    constant SEEK_END: Int32;
 
     """
     Opens the file with the specified mode.
@@ -74,7 +72,7 @@ module FileSystem.File is
     Sets the file position indicator in the stream pointed to by fh
     """
     generic [R: Region]
-    function seek(fh: &[FileHandle, R], offset: Int64, whence: SeekWhence): Int32;
+    function seek(fh: &[FileHandle, R], offset: Int64, whence: Int32): Int32;
 
     """
     Obtains the value of the file position indicator in the stream pointed to by fh

@@ -3,11 +3,16 @@ import FileSystem.File (
     open,
     close,
     read,
-    write
+    readSafe,
+    write,
+    seek,
+    SEEK_SET,
+    tell
 );
 
 import Standard.Buffer (
     Buffer,
+    length,
     getSpan,
     destroyFree
 );
@@ -33,6 +38,7 @@ module body Test is
         test(testFileExist(&!mut_root), "Existent file test");
         test(testReadFile(&!mut_root), "Read file test");
         test(testWriteFile(&!mut_root), "Write new file test");
+        test(testSeekInFile(&!mut_root), "Seek in file test");
         surrenderRoot(mut_root);
 
         return ExitSuccess();
@@ -112,6 +118,43 @@ module body Test is
                 releaseFileSystem(fs);
                 releaseSystem(sys);
                 return written = 14;
+        end case;
+    end;
+
+    generic [R: Region]
+    function testSeekInFile(root: &![RootCapability, R]): Bool is
+        var sys: SystemCapability := acquireSystem(&~root);
+        var fs: FileSystemCapability := acquireFileSystem(&~root);
+        system(&!sys, "echo seektest > seektest.txt");
+        let maybe_fh: Option[FileHandle] := open(&!fs, "seektest.txt", "r");
+        case maybe_fh of
+            when None do
+                releaseFileSystem(fs);
+                releaseSystem(sys);
+                return false;
+            when Some(value as fh: FileHandle) do
+                seek(&fh, 4, SEEK_SET);
+                let count: Index := 4;
+                let loc: Int64 := tell(&fh);
+                let maybe_buf: Option[Buffer[Nat8]] := readSafe(&fh, count);
+                close(fh);
+                system(&!sys, "rm seektest.txt");
+                case maybe_buf of
+                    when None do
+                        releaseSystem(sys);
+                        releaseFileSystem(fs);
+                        return false;
+                    when Some(value as buf: Buffer[Nat8]) do
+                        printLn(getSpan(&buf, 0, count - 1));
+                        var retval: Bool := false;
+                        if (length(&buf) = count) and (loc = 4) then
+                            retval := true;
+                        end if;
+                        destroyFree(buf);
+                        releaseSystem(sys);
+                        releaseFileSystem(fs);
+                        return retval;
+                end case;
         end case;
     end;
 
